@@ -1,0 +1,15 @@
+{
+  "name": "CosmosMiner",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [],
+      "settings": {}
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/on-start.sh",
+  "forwardPorts": [3000],
+  "workspaceFolder": "/workspaces/CosmosMiner"
+}
