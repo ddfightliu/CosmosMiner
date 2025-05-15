@@ -8,8 +8,8 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, reactive } from 'vue';
 import { animate } from '@/utils/animationUtils';
-import { initGame, handleResize, handleKeyDown, handleKeyUp, handleMouseMove, setupPointerLock, handlePointerLockChange } from '@/utils/gameSetup';
-import { generateTerrain, addEquirectangularSkybox, setupMouseWheelZoom } from '@/utils/terrainUtils';
+import { initGame, handleResize, handleKeyDown, handleKeyUp, handleMouseMove, setupPointerLock, handlePointerLockChange } from '@/utils/sceneMain';
+import { addEquirectangularSkybox, setupMouseWheelZoom } from '@/utils/terrainUtils';
 import type { InventoryItem } from '@/types/InventoryItem';
 import * as THREE from 'three';
 
@@ -17,12 +17,12 @@ import * as THREE from 'three';
 let gameCanvas = ref<HTMLCanvasElement | null>(null);
 let gameTime = ref(0);
 let fps = ref(0);
-const worldSeed = Math.random().toString(36).substring(7);
-const inventory = reactive<InventoryItem[]>(Array(10).fill({ name: '', count: 0 }));
-
 let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 let scene: THREE.Scene = new THREE.Scene();
+
+const worldSeed = Math.random().toString(36).substring(7);
+const inventory = reactive<InventoryItem[]>(Array(10).fill({ name: '', count: 0 }));
 const moveState = reactive({ forward: false, backward: false, left: false, right: false });
 const isPointerLocked = ref(false);
 const rotation = reactive({ x: 0, y: 0 });
@@ -37,9 +37,13 @@ onMounted(() => {
       0.1,
       1000
     );
-    camera.position.set(0, 10, 50);
+
+    addEquirectangularSkybox(scene);
+
     initGame(scene, worldSeed, renderer);
+    camera.position.set(0, 10, 50);
     setupMouseWheelZoom(camera);
+
     animate(scene, camera, renderer, gameTime, fps, inventory);
 
   } else {
