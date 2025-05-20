@@ -1,0 +1,11 @@
+Model Information:
+* title:	Low Poly Female Base Mesh
+* source:	https://sketchfab.com/3d-models/low-poly-female-base-mesh-583d7e9c0de945beb30004eabac92a26
+* author:	Mesh-Base (https://sketchfab.com/mesh-base)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Low Poly Female Base Mesh" (https://sketchfab.com/3d-models/low-poly-female-base-mesh-583d7e9c0de945beb30004eabac92a26) by Mesh-Base (https://sketchfab.com/mesh-base) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

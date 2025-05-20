@@ -9,6 +9,8 @@
       "settings": {}
     }
   },
+  "postStartCommand": "npm run dev",
+  
   "postCreateCommand": "bash .devcontainer/on-start.sh",
   "forwardPorts": [3000],
   "workspaceFolder": "/workspaces/CosmosMiner"

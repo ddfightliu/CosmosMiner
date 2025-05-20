@@ -1,11 +1,14 @@
 import * as THREE from 'three';
-import { generateTerrain, addEquirectangularSkybox } from '@/utils/terrainUtils';
+import { generateTerrain } from '@/utils/terrainUtils';
+import { addEquirectangularSkybox } from '@/utils/skyboxUtils';
+// @ts-ignore
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
-
-export function initGame(
+export function setScene(
   sceneroot: THREE.Scene,
   worldSeed: string,
   renderer: THREE.WebGLRenderer,
+  onModelLoaded?: (model: THREE.Object3D) => void
 ) {
   const scene = new THREE.Scene();
 
@@ -19,54 +22,42 @@ export function initGame(
 
   generateTerrain(scene, worldSeed);
   addEquirectangularSkybox(scene);
+
+  // 动画相关变量
+  let mixer: THREE.AnimationMixer | null = null;
+  const clock = new THREE.Clock();
+
+  // 加载模型
+  const loader = new GLTFLoader();
+  loader.load('/people/low_poly_female_base_mesh/scene.gltf', (gltf: any) => {
+    const model = gltf.scene;
+    model.position.set(0, 0, 0);
+    model.scale.set(10, 10, 10); // 可根据需要调整缩放
+    scene.add(model);
+
+    // 如果有动画，创建 AnimationMixer 并播放第一个动画
+    if (gltf.animations && gltf.animations.length > 0) {
+      mixer = new THREE.AnimationMixer(model);
+      const action = mixer.clipAction(gltf.animations[0]);
+      action.play();
+    }
+
+    if (onModelLoaded) {
+      onModelLoaded(model); // 回调返回模型
+    }
+  }, undefined, (error: any) => {
+    console.error('Error loading model:', error);
+  });
+
+  // 渲染循环，更新动画
+  function animate() {
+    requestAnimationFrame(animate);
+    if (mixer) {
+      mixer.update(clock.getDelta());
+    }
+    renderer.render(scene, (renderer as any).camera || new THREE.PerspectiveCamera());
+  }
+  animate();
+
   sceneroot.add(scene);
-
-}
-
-export function handleResize(camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer) {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-export function handleKeyDown(event: KeyboardEvent, moveState: { forward: boolean; backward: boolean; left: boolean; right: boolean }) {
-  switch (event.code) {
-    case 'KeyW': moveState.forward = true; break;
-    case 'KeyS': moveState.backward = true; break;
-    case 'KeyA': moveState.left = true; break;
-    case 'KeyD': moveState.right = true; break;
-  }
-}
-
-export function handleKeyUp(event: KeyboardEvent, moveState: { forward: boolean; backward: boolean; left: boolean; right: boolean }) {
-  switch (event.code) {
-    case 'KeyW': moveState.forward = false; break;
-    case 'KeyS': moveState.backward = false; break;
-    case 'KeyA': moveState.left = false; break;
-    case 'KeyD': moveState.right = false; break;
-  }
-}
-
-export function handleMouseMove(event: MouseEvent, camera: THREE.PerspectiveCamera, isPointerLocked: boolean, rotation: { x: number; y: number }) {
-  if (!isPointerLocked) return;
-
-  const movementX = event.movementX || 0;
-  const movementY = event.movementY || 0;
-
-  rotation.y -= movementX * 0.002;
-  rotation.x -= movementY * 0.002;
-
-  rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation.x));
-
-  camera.rotation.order = 'YXZ';
-  camera.rotation.y = rotation.y;
-  camera.rotation.x = rotation.x;
-}
-
-export function setupPointerLock(gameCanvas: Ref<HTMLCanvasElement | null>) {
-  gameCanvas.value?.requestPointerLock();
-}
-
-export function handlePointerLockChange(gameCanvas: Ref<HTMLCanvasElement | null>, isPointerLocked: Ref<boolean>) {
-  isPointerLocked.value = document.pointerLockElement === gameCanvas.value;
 }

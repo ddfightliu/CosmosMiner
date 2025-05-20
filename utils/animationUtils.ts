@@ -16,11 +16,6 @@ export function animate(
 ) {
   let lastFrameTime = performance.now();
 
-  function calculateFPS() {
-    const now = performance.now();
-    fps.value = Math.round(1000 / (now - lastFrameTime));
-    lastFrameTime = now;
-  }
 
   function updateDayNightCycle() {
     gameTime.value = (gameTime.value + 1 / 60) % 24;
@@ -38,18 +33,10 @@ export function animate(
     scene.background = skyColor;
   }
 
-  function updateHUD() {
-    const fpsElement = document.querySelector('.fps');
-    if (fpsElement) {
-      fpsElement.textContent = `FPS: ${fps.value}`;
-    }
-  }
 
   function loop() {
     requestAnimationFrame(loop);
-    calculateFPS();
     updateDayNightCycle();
-    updateHUD();
     renderer.render(scene, camera);
   }
 

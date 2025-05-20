@@ -6,10 +6,12 @@ export function generateTerrain(scene: THREE.Scene, worldSeed: string) {
   const prng = alea(worldSeed);
   const noise2D = createNoise2D(prng);
 
-  const geometry = new THREE.PlaneGeometry(1000, 1000, 200, 200);
-  const material = new THREE.MeshPhongMaterial({ vertexColors: true, flatShading: true });
+  // Create a PlaneGeometry for the terrain
+  const geometry = new THREE.PlaneGeometry(1000, 1000, 1000, 1000); // Increased resolution for smoother terrain
+  geometry.rotateX(-Math.PI / 2); // Rotate the plane to be horizontal
+  const material = new THREE.MeshPhongMaterial({ vertexColors: true, flatShading: false });
 
-  const vertices = geometry.attributes.position.array;
+  const vertices = geometry.attributes.position.array; // Access the vertices directly
   const colors = new Float32Array(vertices.length);
 
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
@@ -18,60 +20,55 @@ export function generateTerrain(scene: THREE.Scene, worldSeed: string) {
     const x = vertices[i] / 100;
     const z = vertices[i + 2] / 100;
 
-    const baseNoise = noise2D(x * 0.5, z * 0.5) * 20;
-    const detailNoise = noise2D(x * 2, z * 2) * 5;
-    const mountainNoise = Math.pow(Math.abs(noise2D(x * 0.2, z * 0.2)), 2) * 30;
-    const riverNoise = Math.abs(noise2D(x * 0.3, z * 0.3));
+    // Base terrain height using Perlin-like noise
+    const baseHeight = noise2D(x , z ) ;
 
-    const temperature = (noise2D(x * 0.2 + 1000, z * 0.2 + 1000) + 1) * 0.5;
-    const moisture = (noise2D(x * 0.2 + 2000, z * 0.2 + 2000) + 1) * 0.5;
+    // Add mountain ranges with higher frequency noise
+    const mountainHeight = Math.pow(Math.abs(noise2D(x*0.3, z * 0.5)), 5) * 50;
 
-    let height = baseNoise + detailNoise + mountainNoise;
+    // Simulate river valleys by carving out lower areas
+    const riverNoise = Math.abs(noise2D(x , z ));
+    let height = baseHeight + mountainHeight;
 
-    if (riverNoise < 0.1 && height > -5) {
-      height = Math.min(height, -3);
+    if (riverNoise < 0.05) {
+      height -= 10 * (0.1 - riverNoise); // Carve deeper valleys near rivers
     }
 
-    vertices[i + 1] = height;
+    vertices[i + 1] =height; // Set the Y coordinate (height)
 
-    const color = new THREE.Color(0x90ee90);
+    // Assign colors based on height
+    const color = new THREE.Color();
+    if (height < 0) {
+      color.set(0x1e90ff); // Water
+    } else if (height < 10) {
+      color.set(0x90ee90); // Grass
+    } else if (height < 30) {
+      color.set(0xbbbbbb); // Dirt
+    } else {
+      color.set(0xffffff); // Snow
+    }
+
     colors[i] = color.r;
     colors[i + 1] = color.g;
     colors[i + 2] = color.b;
   }
 
-  geometry.computeVertexNormals();
+  geometry.computeVertexNormals(); // Recalculate normals for smooth shading
+
   const terrain = new THREE.Mesh(geometry, material);
-  terrain.rotation.x = -Math.PI / 2;
+
+  //const wireframe = new THREE.WireframeGeometry(geometry);
+  //const lineMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+  //const grid = new THREE.LineSegments(wireframe, lineMaterial);
+  //scene.add(grid);
+
+  // Ensure a light source is added to the scene
+  const light = new THREE.DirectionalLight(0xffffff, 1);
+  light.position.set(100, 200, 100);
+  scene.add(light);
 
   scene.add(terrain);
 }
 
-export function addEquirectangularSkybox(scene: THREE.Scene) {
-  const textureLoader = new THREE.TextureLoader();
-  const texture = textureLoader.load('/public/skybox/earth_atmos_2048.jpg', (texture) => {
-    texture.mapping = THREE.EquirectangularReflectionMapping;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    scene.background = texture;
-  });
 
-  const geometry = new THREE.SphereGeometry(500, 60, 40);
-  const material = new THREE.MeshBasicMaterial({
-    map: texture,
-    side: THREE.BackSide,
-  });
-  const skybox = new THREE.Mesh(geometry, material);
-  scene.add(skybox);
-}
 
-export function setupMouseWheelZoom(camera: THREE.PerspectiveCamera) {
-  window.addEventListener('wheel', (event) => {
-    const zoomFactor = 0.1;
-    if (event.deltaY < 0) {
-      camera.position.z -= zoomFactor;
-    } else {
-      camera.position.z += zoomFactor;
-    }
-    camera.position.z = Math.max(1, Math.min(100, camera.position.z));
-  });
-}
