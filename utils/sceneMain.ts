@@ -30,20 +30,19 @@ export function setScene(
   // 加载模型
   const loader = new GLTFLoader();
   loader.load('/people/low_poly_female_base_mesh/scene.gltf', (gltf: any) => {
-    const model = gltf.scene;
-    model.position.set(0, 0, 0);
-    model.scale.set(10, 10, 10); // 可根据需要调整缩放
-    scene.add(model);
+    gltf.scene.position.set(0, 0, 0);
+    gltf.scene.scale.set(10, 10, 10); // 可根据需要调整缩放
+    scene.add(gltf.scene);
 
     // 如果有动画，创建 AnimationMixer 并播放第一个动画
     if (gltf.animations && gltf.animations.length > 0) {
-      mixer = new THREE.AnimationMixer(model);
+      mixer = new THREE.AnimationMixer(gltf.scene);
       const action = mixer.clipAction(gltf.animations[0]);
       action.play();
     }
 
     if (onModelLoaded) {
-      onModelLoaded(model); // 回调返回模型
+      onModelLoaded(gltf.scene); // 回调返回模型
     }
   }, undefined, (error: any) => {
     console.error('Error loading model:', error);
